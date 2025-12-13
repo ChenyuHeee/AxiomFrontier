@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Axiom Frontier</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Text-First MMO</p>
+        <h1>Axiom Frontier</h1>
+        <p class="sub">自然语言交互 · LLM 驱动 · 城市规则由统治者/城主决定</p>
+      </div>
+      <div class="status" id="status">准备就绪</div>
+    </header>
+
+    <section class="panel">
+      <div class="row">
+        <label class="field">
+          <span>玩家 ID</span>
+          <input id="playerId" type="text" value="demo" />
+        </label>
+        <label class="field">
+          <span>服务器</span>
+          <input id="server" type="text" value="" placeholder="留空即当前域名" />
+        </label>
+        <button id="health" class="ghost">健康检查</button>
+      </div>
+
+      <label class="field">
+        <span>输入（自然语言）</span>
+        <textarea id="input" rows="3" placeholder="例如：向北走 / 提现50 / 环顾四周"></textarea>
+      </label>
+
+      <div class="row">
+        <button id="send">发送行动</button>
+        <button id="clear" class="ghost">清空输出</button>
+        <button id="refreshNpc" class="ghost">刷新 NPC</button>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <div class="card-title">行动反馈</div>
+        <div class="summary" id="summary">等待输入…</div>
+        <div class="sensory" id="sensory">
+          <div><strong>视觉</strong><span id="vision"></span></div>
+          <div><strong>听觉</strong><span id="audio"></span></div>
+          <div><strong>嗅觉</strong><span id="smell"></span></div>
+          <div><strong>触觉</strong><span id="touch"></span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">状态</div>
+        <div class="stats" id="stats">
+          <div><strong>生命值</strong><span id="hp">-</span></div>
+          <div><strong>金钱</strong><span id="credits">-</span></div>
+          <div><strong>饥饿</strong><span id="hunger">-</span></div>
+          <div><strong>位置</strong><span id="location">-</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">NPC 对话</div>
+        <div class="row">
+          <select id="npcSelect" class="select"></select>
+          <button id="talk">对话</button>
+        </div>
+        <label class="field">
+          <span>对话输入</span>
+          <textarea id="npcInput" rows="2" placeholder="询问情报、交易、传闻"></textarea>
+        </label>
+        <div class="summary" id="npcReply">等待选择 NPC</div>
+      </div>
+      <div class="card">
+        <div class="card-title">世界事件</div>
+        <ul id="events" class="events"></ul>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    const $ = (id) => document.getElementById(id);
+    const statusEl = $("status");
+    const summaryEl = $("summary");
+    const sensoryMap = {
+      visual: $("vision"),
+      audio: $("audio"),
+      smell: $("smell"),
+      touch: $("touch"),
+    };
+    const statsEl = {
+      hp: $("hp"),
+      credits: $("credits"),
+      hunger: $("hunger"),
+      location: $("location"),
+    };
+
+    const npcSelect = $("npcSelect");
+    const npcReply = $("npcReply");
+    const eventsEl = $("events");
+
+    async function loadNpcs() {
+      try {
+        const res = await fetch(`${baseUrl()}/api/npc`);
+        const json = await res.json();
+        npcSelect.innerHTML = "";
+        const list = json.npcs || [];
+        if (list.length === 0) {
+          const opt = document.createElement("option");
+          opt.value = "";
+          opt.textContent = "暂无 NPC";
+          npcSelect.appendChild(opt);
+          npcReply.textContent = "等待统治者/LLM 生成 NPC";
+          return;
+        }
+        list.forEach((n) => {
+          const opt = document.createElement("option");
+          opt.value = n.id;
+          opt.textContent = `${n.name} (${n.role || ""})`;
+          npcSelect.appendChild(opt);
+        });
+        if (!npcSelect.value && npcSelect.options.length > 0) {
+          npcSelect.value = npcSelect.options[0].value;
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function loadEvents() {
+      try {
+        const res = await fetch(`${baseUrl()}/api/events`);
+        const json = await res.json();
+        eventsEl.innerHTML = "";
+        const list = json.events || [];
+        if (list.length === 0) {
+          const li = document.createElement("li");
+          li.innerHTML = `<div class=\"evt-title\">暂无事件</div><div class=\"evt-detail\">等待统治者/LLM 发布动态…</div>`;
+          eventsEl.appendChild(li);
+          return;
+        }
+        list.forEach((evt) => {
+          const li = document.createElement("li");
+          li.innerHTML = `<div class=\"evt-title\">${evt.title}</div><div class=\"evt-detail\">${evt.detail}</div>`;
+          eventsEl.appendChild(li);
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function setStatus(text, tone = "info") {
+      statusEl.textContent = text;
+      statusEl.dataset.tone = tone;
+    }
+
+    function baseUrl() {
+      const v = $("server").value.trim();
+      return v || `${window.location.origin}`;
+    }
+
+    async function doHealth() {
+      setStatus("检查中…", "info");
+      try {
+        const res = await fetch(`${baseUrl()}/health`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        setStatus(`健康: ${json.status}`, "success");
+      } catch (e) {
+        setStatus(`健康检查失败: ${(e).message}`, "error");
+      }
+    }
+
+    async function send() {
+      const input = $("input").value.trim();
+      const playerId = $("playerId").value.trim() || "demo";
+      if (!input) {
+        setStatus("请输入内容", "error");
+        return;
+      }
+      setStatus("请求中…", "info");
+      try {
+        const res = await fetch(`${baseUrl()}/api/session/${encodeURIComponent(playerId)}/act`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ input }),
+        });
+        const json = await res.json();
+        if (!res.ok) {
+          setStatus(`失败: ${json.error || res.status}`, "error");
+          summaryEl.textContent = json.error || "执行失败";
+          return;
+        }
+        summaryEl.textContent = json.result?.summary ?? "";
+        const sensory = json.result?.sensory ?? {};
+        sensoryMap.visual.textContent = sensory.visual || "（无）";
+        sensoryMap.audio.textContent = sensory.audio || "（无）";
+        sensoryMap.smell.textContent = sensory.smell || "（无）";
+        sensoryMap.touch.textContent = sensory.touch || "（无）";
+        const state = json.result?.state;
+        if (state) {
+          statsEl.hp.textContent = `${state.health}`;
+          statsEl.credits.textContent = `${state.credits}`;
+          statsEl.hunger.textContent = `${state.hunger ?? "-"}`;
+          statsEl.location.textContent = state.location;
+        }
+        if (!res.ok) {
+          return;
+        }
+        setStatus("完成", "success");
+      } catch (e) {
+        setStatus(`请求失败: ${(e).message}`, "error");
+      }
+    }
+
+    $("send").addEventListener("click", send);
+    $("health").addEventListener("click", doHealth);
+    $("clear").addEventListener("click", () => {
+      summaryEl.textContent = "等待输入…";
+      Object.values(sensoryMap).forEach((el) => (el.textContent = ""));
+      Object.values(statsEl).forEach((el) => (el.textContent = "-"));
+      setStatus("已清空", "info");
+    });
+
+    $("refreshNpc").addEventListener("click", loadNpcs);
+    $("talk").addEventListener("click", async () => {
+      const npcId = npcSelect.value;
+      const input = $("npcInput").value.trim();
+      if (!npcId) {
+        npcReply.textContent = "请先选择 NPC";
+        return;
+      }
+      if (!input) {
+        npcReply.textContent = "请输入对话";
+        return;
+      }
+      try {
+        const res = await fetch(`${baseUrl()}/api/npc/${encodeURIComponent(npcId)}/talk`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ input }),
+        });
+        const json = await res.json();
+        if (!res.ok) {
+          npcReply.textContent = json.error || "对话失败";
+          return;
+        }
+        npcReply.textContent = json.reply?.reply || json.reply || "";
+      } catch (e) {
+        npcReply.textContent = (e).message;
+      }
+    });
+
+    $("input").addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        send();
+      }
+    });
+
+    setStatus("准备就绪", "success");
+    loadNpcs();
+    loadEvents();
+    setInterval(loadNpcs, 15000);
+    setInterval(loadEvents, 15000);
+  </script>
+</body>
+</html>

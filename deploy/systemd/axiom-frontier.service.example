@@ -1,0 +1,22 @@
+[Unit]
+Description=Axiom Frontier server
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/axiom-frontier
+ExecStart=/usr/bin/node dist/index.js
+Restart=always
+Environment=NODE_ENV=production
+Environment=PORT=8787
+Environment=DEESEEK_API_KEY=replace_with_key
+Environment=DEESEEK_BASE_URL=https://api.deepseek.com
+Environment=DEESEEK_MODEL=deepseek-chat
+
+# Optional hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
