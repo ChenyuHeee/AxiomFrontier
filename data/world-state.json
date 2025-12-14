@@ -4,9 +4,9 @@
       "id": "demo",
       "location": "market",
       "inventory": [],
-      "credits": 100,
-      "health": 100,
-      "hunger": 98,
+      "credits": 173,
+      "health": 95,
+      "hunger": 93,
       "status": "ok",
       "discoveredRooms": [
         "market"
@@ -33,6 +33,11 @@
             "interaction": "payment_verified"
           }
         }
+      },
+      "heat": 0,
+      "jobCooldowns": {
+        "courier-market": 1765682051609,
+        "pickpocket": 1765682068959
       }
     }
   ],

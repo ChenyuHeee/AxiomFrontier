@@ -8,7 +8,11 @@ const configSchema = z.object({
   deepseekApiKey: z.string().min(1),
   deepseekBaseUrl: z.string().url().default("https://api.deepseek.com"),
   deepseekModel: z.string().default("deepseek-chat"),
-  enableAutoTeams: z.boolean().default(true),
+  // Unsafe dev/design agents that can hotpatch code via LLM
+  enableAutoTeams: z.boolean().default(false),
+  // Ambient LLM world ticks (events/NPC autonomy). Disable to save tokens and improve stability.
+  enableAmbientLLM: z.boolean().default(false),
+  enableRuler: z.boolean().default(false),
 });
 
 export function loadConfig(): Config {
@@ -18,6 +22,8 @@ export function loadConfig(): Config {
     deepseekBaseUrl: process.env.DEEPSEEK_BASE_URL,
     deepseekModel: process.env.DEEPSEEK_MODEL,
     enableAutoTeams: process.env.ENABLE_AUTO_TEAMS ? process.env.ENABLE_AUTO_TEAMS === "true" : undefined,
+    enableAmbientLLM: process.env.ENABLE_AMBIENT_LLM ? process.env.ENABLE_AMBIENT_LLM === "true" : undefined,
+    enableRuler: process.env.ENABLE_RULER ? process.env.ENABLE_RULER === "true" : undefined,
   });
 
   if (!parsed.success) {

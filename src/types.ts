@@ -27,6 +27,8 @@ export interface PlayerState {
   health: number;
   hunger: number;
   status: "ok" | "down";
+  heat?: number;
+  jobCooldowns?: Record<string, number>;
   discoveredRooms?: string[];
   knownRooms?: string[];
   arOverlay?: {

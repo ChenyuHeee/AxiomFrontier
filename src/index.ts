@@ -4,6 +4,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { loadConfig } from "./config.js";
 import { DeepseekClient } from "./llm/deepseek.js";
 import { GameEngine } from "./core/engine.js";
+import { computeWantedLevel, decayHeatForAllPlayers, listJobs, runJob } from "./core/jobs.js";
 import type { BugReport, LlmMessage, Npc, NpcMemory, NpcTalkResult, PlanAction, RulerDecision, WorldEvent, WorldSpec } from "./types.js";
 import fs from "node:fs";
 
@@ -494,14 +495,64 @@ async function orchestrateTick() {
   try {
     // Skip LLM churn when没有玩家活跃/创建
     if (engine.world.players.size === 0) return;
-    const tasks = [rulerTick(), eventTick(), npcGenerationTick(), npcTick()];
-    if (config.enableAutoTeams) {
-      tasks.push(devTeamTick(), designTeamTick());
-    }
+    const tasks: Array<Promise<unknown>> = [];
+    if (config.enableAmbientLLM) tasks.push(eventTick(), npcGenerationTick(), npcTick());
+    if (config.enableRuler) tasks.unshift(rulerTick());
+    if (config.enableAutoTeams) tasks.push(devTeamTick(), designTeamTick());
+    // Non-LLM world maintenance
+    decayHeatForAllPlayers(engine.world, 4);
     await Promise.all(tasks);
   } catch (err) {
     console.error("orchestrator tick error", err);
   }
+}
+
+function buildPlayerStatus(playerId: string) {
+  const player = engine.ensurePlayer(playerId);
+  const room = engine.world.rooms.get(player.location);
+  const city = room ? engine.world.getCityForRoom(room.id) : undefined;
+  const heat = Math.max(0, Math.min(100, Number(player.heat ?? 0) || 0));
+  const wantedLevel = computeWantedLevel(heat);
+
+  const npcsInRoom = room
+    ? Array.from(engine.world.npcs.values())
+        .filter((n) => n.location === room.id)
+        .map((n) => ({ id: n.id, name: n.name, role: n.role }))
+    : [];
+  const playersInRoom = room
+    ? Array.from(engine.world.players.values())
+        .filter((p) => p.location === room.id)
+        .map((p) => ({ id: p.id }))
+    : [];
+
+  return {
+    player: {
+      id: player.id,
+      credits: player.credits,
+      health: player.health,
+      hunger: player.hunger ?? 0,
+      heat,
+      wantedLevel,
+      status: player.status,
+      location: player.location,
+    },
+    room: room
+      ? {
+          id: room.id,
+          name: room.name,
+          zone: room.zone,
+          neighbors: room.neighbors,
+          cityId: room.cityId,
+        }
+      : null,
+    city: city ? { id: city.id, name: city.name } : null,
+    counts: {
+      npcsHere: npcsInRoom.length,
+      playersHere: playersInRoom.length,
+    },
+    npcsHere: npcsInRoom,
+    playersHere: playersInRoom,
+  };
 }
 
 app.get("/health", (_req, res) => {
@@ -635,10 +686,73 @@ app.post("/api/session/:playerId/act", async (req, res) => {
       smell: sensory.smell ?? "",
       touch: sensory.touch ?? "",
     };
-    res.json({ plan, result: { ...result, sensory: normalizedSensory } });
+    res.json({ plan, result: { ...result, sensory: normalizedSensory }, ui: buildPlayerStatus(playerId) });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+// Deterministic action apply (bypass LLM) for better UX and fewer tokens
+app.post("/api/session/:playerId/apply", (req, res) => {
+  const playerId = req.params.playerId;
+  const plan = (req.body?.plan ?? req.body) as Partial<PlanAction>;
+  if (!plan || typeof plan.action !== "string" || !plan.action.trim()) {
+    res.status(400).json({ error: "plan.action is required" });
+    return;
+  }
+  try {
+    const action = plan.action.trim();
+    if (!engine.hasAction(action)) {
+      res.status(400).json({ error: `unknown action: ${action}` });
+      return;
+    }
+    const normalized: PlanAction = {
+      action,
+      target: typeof plan.target === "string" ? plan.target : undefined,
+      amount: typeof plan.amount === "number" ? plan.amount : undefined,
+      path: Array.isArray(plan.path) ? (plan.path as string[]) : undefined,
+      risk: (plan.risk as any) ?? "low",
+      notes: typeof plan.notes === "string" ? plan.notes : undefined,
+    };
+    const result = engine.applyAction(playerId, normalized);
+    orchestrateTick().catch((err) => {
+      console.error("orchestrate after apply failed", err);
+    });
+    res.json({ plan: normalized, result, ui: buildPlayerStatus(playerId) });
+  } catch (err) {
+    res.status(400).json({ error: (err as Error).message });
+  }
+});
+
+// Player status snapshot for UI refresh
+app.get("/api/session/:playerId/status", (req, res) => {
+  const playerId = req.params.playerId;
+  res.json(buildPlayerStatus(playerId));
+});
+
+// Location jobs (non-LLM loop to improve playability and save tokens)
+app.get("/api/session/:playerId/jobs", (req, res) => {
+  const playerId = req.params.playerId;
+  const player = engine.ensurePlayer(playerId);
+  const jobs = listJobs(engine.world, player);
+  const heat = Math.max(0, Math.min(100, Number(player.heat ?? 0) || 0));
+  res.json({ location: player.location, heat, wantedLevel: computeWantedLevel(heat), jobs });
+});
+
+app.post("/api/session/:playerId/job", (req, res) => {
+  const playerId = req.params.playerId;
+  const jobId = typeof req.body?.jobId === "string" ? req.body.jobId : "";
+  if (!jobId) {
+    res.status(400).json({ error: "jobId is required" });
+    return;
+  }
+  try {
+    const player = engine.ensurePlayer(playerId);
+    const result = runJob(engine.world, player, jobId);
+    res.json({ result });
+  } catch (err) {
+    res.status(400).json({ error: (err as Error).message });
   }
 });
 

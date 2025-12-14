@@ -81,8 +81,18 @@
               <div><strong>生命值</strong><span id="hp">-</span></div>
               <div><strong>金钱</strong><span id="credits">-</span></div>
               <div><strong>饥饿</strong><span id="hunger">-</span></div>
+              <div><strong>热度</strong><span id="heat">-</span></div>
+              <div><strong>通缉</strong><span id="wanted">-</span></div>
               <div><strong>位置</strong><span id="location">-</span></div>
             </div>
+            <div class="card-sub" id="locationDetail">-</div>
+            <div class="chips" id="neighbors"></div>
+            <div class="chips-help muted">提示：输入以 <code>/</code> 开头可走确定性规则（不走 LLM），如 <code>/observe</code>、<code>/move market</code>、<code>/withdraw 50</code></div>
+          </div>
+          <div class="card">
+            <div class="card-title">任务</div>
+            <div class="summary" id="jobsStatus">加载中…</div>
+            <ul id="jobsList" class="events"></ul>
           </div>
           <div class="card">
             <div class="card-title">NPC 对话</div>
@@ -137,8 +147,13 @@
       hp: $("hp"),
       credits: $("credits"),
       hunger: $("hunger"),
+      heat: $("heat"),
+      wanted: $("wanted"),
       location: $("location"),
     };
+
+    const locationDetailEl = $("locationDetail");
+    const neighborsEl = $("neighbors");
 
     const npcSelect = $("npcSelect");
     const npcReply = $("npcReply");
@@ -146,6 +161,8 @@
     const bugStatusEl = $("bugStatus");
     const mapList = $("mapList");
     const mapStatus = $("mapStatus");
+    const jobsStatus = $("jobsStatus");
+    const jobsList = $("jobsList");
     const mapCanvas = $("mapCanvas");
     const mapTooltip = $("mapTooltip");
     const ctx = mapCanvas.getContext("2d");
@@ -164,6 +181,106 @@
       const rect = mapCanvas.getBoundingClientRect();
       mapCanvas.width = Math.max(320, rect.width);
       mapCanvas.height = Math.max(260, rect.height);
+    }
+
+    function formatRoom(room, city) {
+      if (!room) return "未知地点";
+      const zone = room.zone === "city" ? "城市" : "荒野";
+      const cityName = city?.name ? ` · ${city.name}` : "";
+      return `${room.name || room.id}（${zone}${cityName}）`;
+    }
+
+    function renderNeighbors(room) {
+      neighborsEl.innerHTML = "";
+      const neighbors = room?.neighbors || [];
+      if (!neighbors.length) return;
+      neighbors.forEach((nbr) => {
+        const btn = document.createElement("button");
+        btn.className = "chip";
+        btn.type = "button";
+        btn.textContent = `前往 ${nbr}`;
+        btn.addEventListener("click", () => applyPlan({ action: "move", target: nbr, risk: "low" }));
+        neighborsEl.appendChild(btn);
+      });
+    }
+
+    function applyUi(ui) {
+      const p = ui?.player;
+      const room = ui?.room;
+      const city = ui?.city;
+      if (!p) return;
+      statsEl.hp.textContent = `${p.health ?? "-"}`;
+      statsEl.credits.textContent = `${p.credits ?? "-"}`;
+      statsEl.hunger.textContent = `${p.hunger ?? "-"}`;
+      statsEl.heat.textContent = `${Math.round(p.heat ?? 0)}`;
+      statsEl.wanted.textContent = `${p.wantedLevel ?? 0}`;
+      statsEl.location.textContent = room?.id || p.location || "-";
+      locationDetailEl.textContent = formatRoom(room, city);
+      renderNeighbors(room);
+    }
+
+    async function loadStatus() {
+      const playerId = $("playerId").value.trim() || "demo";
+      try {
+        const res = await fetch(`${baseUrl()}/api/session/${encodeURIComponent(playerId)}/status`);
+        const json = await res.json();
+        if (!res.ok) return;
+        applyUi(json);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function applyPlan(plan) {
+      const playerId = $("playerId").value.trim() || "demo";
+      setStatus("执行中…", "info");
+      try {
+        const res = await fetch(`${baseUrl()}/api/session/${encodeURIComponent(playerId)}/apply`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ plan }),
+        });
+        const json = await res.json();
+        if (!res.ok) {
+          setStatus("执行失败", "error");
+          summaryEl.textContent = json.error || "执行失败";
+          return;
+        }
+        summaryEl.textContent = json.result?.summary ?? "";
+        const sensory = json.result?.sensory ?? {};
+        sensoryMap.visual.textContent = sensory.visual || "（无）";
+        sensoryMap.audio.textContent = sensory.audio || "（无）";
+        sensoryMap.smell.textContent = sensory.smell || "（无）";
+        sensoryMap.touch.textContent = sensory.touch || "（无）";
+        applyUi(json.ui);
+        setStatus("完成", "success");
+        loadMap();
+        loadJobs();
+        loadNpcPositions();
+        loadPlayerPositions();
+        loadNpcs();
+      } catch (e) {
+        setStatus(friendlyError((e).message, "执行失败"), "error");
+      }
+    }
+
+    function parseSlashCommand(text) {
+      const t = (text || "").trim();
+      if (!t.startsWith("/")) return null;
+      const parts = t.slice(1).trim().split(/\s+/);
+      const cmd = (parts[0] || "").toLowerCase();
+      if (cmd === "observe" || cmd === "look") return { action: "observe", risk: "low" };
+      if (cmd === "move" && parts[1]) return { action: "move", target: parts[1], risk: "low" };
+      if (cmd === "withdraw" && parts[1]) {
+        const n = Number(parts[1]);
+        if (Number.isFinite(n)) return { action: "withdraw", amount: n, risk: "med" };
+      }
+      if (cmd === "attack" && parts[1]) return { action: "attack", target: parts[1], risk: "high" };
+      if (cmd === "trade" && parts[1] && parts[2]) {
+        const n = Number(parts[2]);
+        if (Number.isFinite(n)) return { action: "trade", target: parts[1], amount: n, risk: "med" };
+      }
+      return { __error: "未知 / 指令。支持：/observe /move <roomId> /withdraw <n> /attack <npcId> /trade <npcId> <n>" };
     }
 
     async function loadNpcs() {
@@ -479,10 +596,8 @@
         if (best === null || d < best.d) best = { id: r.id, d };
       });
       if (best && best.d < 30) {
-        const input = `move to ${best.id}`;
-        $("input").value = input;
         lastPath = shortestPath(mapData.rooms, playerRoom, best.id);
-        send();
+        applyPlan({ action: "move", target: best.id, risk: "low" });
         drawMap();
       }
     }
@@ -604,6 +719,82 @@
       }
     }
 
+    async function loadJobs() {
+      const playerId = $("playerId").value.trim() || "demo";
+      jobsStatus.textContent = "加载中…";
+      try {
+        const res = await fetch(`${baseUrl()}/api/session/${encodeURIComponent(playerId)}/jobs`);
+        const json = await res.json();
+        if (!res.ok) {
+          jobsStatus.textContent = json.error || `加载失败 (${res.status})`;
+          return;
+        }
+        const jobs = json.jobs || [];
+        jobsList.innerHTML = "";
+        if (!jobs.length) {
+          jobsStatus.textContent = `当前位置：${json.location || "-"} · 热度：${Math.round(json.heat || 0)} · 通缉：${json.wantedLevel ?? 0}`;
+          return;
+        }
+        jobsStatus.textContent = `当前位置：${json.location} · 热度：${Math.round(json.heat || 0)} · 通缉：${json.wantedLevel ?? 0}`;
+        jobs.forEach((j) => {
+          const li = document.createElement("li");
+          const disabled = !j.available;
+          li.innerHTML = `
+            <div class="evt-title">${j.title} <span class="muted">(${j.type})</span></div>
+            <div class="evt-detail">${j.summary}</div>
+            <div class="evt-detail">奖励：${j.creditReward} · 热度：${j.heatDelta > 0 ? "+" : ""}${j.heatDelta} · 冷却：${j.cooldownSec}s${disabled ? ` · 不可用：${j.reason || "-"}` : ""}</div>
+            <div class="row" style="margin: 8px 0 0;">
+              <button class="ghost" data-job-run="${j.id}" ${disabled ? "disabled" : ""}>执行</button>
+            </div>
+          `;
+          jobsList.appendChild(li);
+        });
+      } catch (e) {
+        jobsStatus.textContent = (e).message;
+      }
+    }
+
+    async function runJob(jobId) {
+      const playerId = $("playerId").value.trim() || "demo";
+      setStatus("执行任务中…", "info");
+      try {
+        const res = await fetch(`${baseUrl()}/api/session/${encodeURIComponent(playerId)}/job`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ jobId }),
+        });
+        const json = await res.json();
+        if (!res.ok) {
+          setStatus("任务失败", "error");
+          summaryEl.textContent = json.error || "任务失败";
+          return;
+        }
+        const result = json.result;
+        summaryEl.textContent = result?.summary ?? "";
+        const sensory = result?.sensory ?? {};
+        sensoryMap.visual.textContent = sensory.visual || "（无）";
+        sensoryMap.audio.textContent = sensory.audio || "（无）";
+        sensoryMap.smell.textContent = sensory.smell || "（无）";
+        sensoryMap.touch.textContent = sensory.touch || "（无）";
+        const state = result?.state;
+        if (state) {
+          statsEl.hp.textContent = `${state.health}`;
+          statsEl.credits.textContent = `${state.credits}`;
+          statsEl.hunger.textContent = `${state.hunger ?? "-"}`;
+          statsEl.heat.textContent = `${Math.round(state.heat ?? 0)}`;
+          statsEl.location.textContent = state.location;
+        }
+        setStatus("任务完成", "success");
+        loadStatus();
+        loadJobs();
+        loadMap();
+        loadNpcPositions();
+        loadPlayerPositions();
+      } catch (e) {
+        setStatus(friendlyError((e).message, "任务失败"), "error");
+      }
+    }
+
     function setStatus(text, tone = "info") {
       statusEl.textContent = text;
       statusEl.dataset.tone = tone;
@@ -641,6 +832,18 @@
         setStatus("请输入内容", "error");
         return;
       }
+
+      const parsed = parseSlashCommand(input);
+      if (parsed?.__error) {
+        setStatus(parsed.__error, "error");
+        return;
+      }
+      if (parsed) {
+        $("input").value = "";
+        await applyPlan(parsed);
+        return;
+      }
+
       setStatus("请求中…", "info");
       try {
         const res = await fetch(`${baseUrl()}/api/session/${encodeURIComponent(playerId)}/act`, {
@@ -665,13 +868,17 @@
           statsEl.hp.textContent = `${state.health}`;
           statsEl.credits.textContent = `${state.credits}`;
           statsEl.hunger.textContent = `${state.hunger ?? "-"}`;
+          statsEl.heat.textContent = `${Math.round(state.heat ?? 0)}`;
           statsEl.location.textContent = state.location;
         }
+        applyUi(json.ui);
         if (!res.ok) {
           return;
         }
         setStatus("完成", "success");
         loadMap();
+        loadJobs();
+        loadStatus();
       } catch (e) {
         setStatus(friendlyError((e).message), "error");
       }
@@ -726,6 +933,8 @@
       summaryEl.textContent = "等待输入…";
       Object.values(sensoryMap).forEach((el) => (el.textContent = ""));
       Object.values(statsEl).forEach((el) => (el.textContent = "-"));
+      locationDetailEl.textContent = "-";
+      neighborsEl.innerHTML = "";
       setStatus("已清空", "info");
     });
 
@@ -766,6 +975,14 @@
       }
     });
 
+    jobsList.addEventListener("click", (e) => {
+      const btn = e.target.closest?.("button[data-job-run]");
+      if (!btn) return;
+      const jobId = btn.getAttribute("data-job-run");
+      if (!jobId) return;
+      runJob(jobId);
+    });
+
     $("input").addEventListener("keydown", (e) => {
       if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
@@ -781,9 +998,11 @@
       drawMap();
     });
     setStatus("准备就绪", "success");
+    loadStatus();
     loadNpcs();
     loadEvents();
     loadMap();
+    loadJobs();
     loadNpcPositions();
     loadPlayerPositions();
     setInterval(loadNpcs, 15000);

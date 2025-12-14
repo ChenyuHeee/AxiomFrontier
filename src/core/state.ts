@@ -50,6 +50,8 @@ export class InMemoryState implements WorldState {
       health: 100,
       hunger: 100,
       status: "ok",
+      heat: 0,
+      jobCooldowns: {},
       discoveredRooms: [],
       knownRooms: [],
       favors: 0,

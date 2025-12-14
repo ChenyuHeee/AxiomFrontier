@@ -144,6 +144,7 @@ button:hover { opacity: 0.9; }
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
 .card { background: #0b1220; border: 1px solid #1f2937; border-radius: 12px; padding: 12px; min-height: 200px; }
 .card-title { font-weight: 600; margin-bottom: 8px; color: #cbd5e1; }
+.card-sub { color: #cbd5e1; font-size: 13px; margin-top: 6px; line-height: 1.35; }
 .summary { font-size: 15px; margin-bottom: 10px; color: #e2e8f0; }
 .summary + .field { margin-top: 8px; }
 .select {
@@ -187,6 +188,36 @@ button:hover { opacity: 0.9; }
   color: #cbd5e1;
   font-size: 14px;
   line-height: 1.4;
+}
+
+.muted {
+  color: #94a3b8;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.chip {
+  background: transparent;
+  border: 1px solid #334155;
+  color: #e2e8f0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+}
+
+.chip:hover {
+  opacity: 0.9;
+}
+
+.chips-help {
+  margin-top: 10px;
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 .map-list {
