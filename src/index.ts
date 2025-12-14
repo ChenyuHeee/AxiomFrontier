@@ -494,7 +494,11 @@ async function orchestrateTick() {
   try {
     // Skip LLM churn when没有玩家活跃/创建
     if (engine.world.players.size === 0) return;
-    await Promise.all([rulerTick(), eventTick(), npcGenerationTick(), npcTick(), devTeamTick(), designTeamTick()]);
+    const tasks = [rulerTick(), eventTick(), npcGenerationTick(), npcTick()];
+    if (config.enableAutoTeams) {
+      tasks.push(devTeamTick(), designTeamTick());
+    }
+    await Promise.all(tasks);
   } catch (err) {
     console.error("orchestrator tick error", err);
   }

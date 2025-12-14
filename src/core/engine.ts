@@ -30,7 +30,7 @@ export class GameEngine {
     const player = this.world.ensurePlayer(playerId);
     const room = this.world.rooms.get(player.location);
     if (!room) throw new Error("Invalid player location");
-    const city = this.world.getCityForRoom(room.id);
+    const city = this.world.getCityForRoom(room.id)?.policy;
     const handler = this.registry.get(plan.action);
     if (!handler) {
       return {

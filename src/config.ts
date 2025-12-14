@@ -8,6 +8,7 @@ const configSchema = z.object({
   deepseekApiKey: z.string().min(1),
   deepseekBaseUrl: z.string().url().default("https://api.deepseek.com"),
   deepseekModel: z.string().default("deepseek-chat"),
+  enableAutoTeams: z.boolean().default(true),
 });
 
 export function loadConfig(): Config {
@@ -16,6 +17,7 @@ export function loadConfig(): Config {
     deepseekApiKey: process.env.DEEPSEEK_API_KEY,
     deepseekBaseUrl: process.env.DEEPSEEK_BASE_URL,
     deepseekModel: process.env.DEEPSEEK_MODEL,
+    enableAutoTeams: process.env.ENABLE_AUTO_TEAMS ? process.env.ENABLE_AUTO_TEAMS === "true" : undefined,
   });
 
   if (!parsed.success) {

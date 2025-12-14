@@ -26,7 +26,16 @@
           </div>
           <button id="refreshMap" class="ghost">刷新地图</button>
         </div>
-        <canvas id="mapCanvas" width="640" height="480"></canvas>
+        <div class="map-wrapper">
+          <canvas id="mapCanvas" width="640" height="480"></canvas>
+          <div class="map-controls">
+            <button id="mapFocus" class="ghost sm">定位到玩家</button>
+            <button id="mapFit" class="ghost sm">自适应</button>
+            <button id="mapReset" class="ghost sm">重置</button>
+          </div>
+          <div class="map-hint">滚轮缩放 · 拖拽平移 · 点击移动 · 双击自适应</div>
+          <div class="map-tooltip" id="mapTooltip"></div>
+        </div>
       </section>
 
       <section class="side">
@@ -138,6 +147,7 @@
     const mapList = $("mapList");
     const mapStatus = $("mapStatus");
     const mapCanvas = $("mapCanvas");
+    const mapTooltip = $("mapTooltip");
     const ctx = mapCanvas.getContext("2d");
 
     let mapData = { rooms: [], connections: [] };
@@ -145,6 +155,7 @@
     let playerPositions = [];
     let view = { scale: 1, panX: 0, panY: 0 };
     let lastPath = [];
+    let hoverRoom = null;
     let isPanning = false;
     let panStart = { x: 0, y: 0 };
     let panOrigin = { x: 0, y: 0 };
@@ -273,6 +284,19 @@
       ctx.stroke();
     }
 
+    function drawHover(positions) {
+      if (!hoverRoom || !ctx) return;
+      const p = positions.get(hoverRoom);
+      if (!p) return;
+      ctx.beginPath();
+      ctx.strokeStyle = "#fde68a";
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([6, 4]);
+      ctx.arc(p.x, p.y, 14, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
     function drawMap() {
       if (!ctx) return;
       ctx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
@@ -299,6 +323,7 @@
 
         // Highlight path
         drawPath(positions, lastPath);
+        drawHover(positions);
 
         // Rooms
         mapData.rooms.forEach((r) => {
@@ -335,7 +360,6 @@
           ctx.fill();
         });
       });
-
     }
 
     function shortestPath(rooms, start, target) {
@@ -370,6 +394,75 @@
       };
     }
 
+    function graphBounds(positions) {
+      const points = Array.from(positions.values());
+      if (!points.length) return null;
+      let minX = points[0].x, maxX = points[0].x, minY = points[0].y, maxY = points[0].y;
+      points.forEach(({ x, y }) => {
+        minX = Math.min(minX, x);
+        maxX = Math.max(maxX, x);
+        minY = Math.min(minY, y);
+        maxY = Math.max(maxY, y);
+      });
+      return { minX, maxX, minY, maxY };
+    }
+
+    function fitView() {
+      const playerRoom = statsEl.location.textContent || (mapData.rooms[0]?.id ?? "");
+      const positions = layoutGraph(mapData.rooms, playerRoom);
+      const bounds = graphBounds(positions);
+      if (!bounds) return;
+      const padding = 60;
+      const width = bounds.maxX - bounds.minX + padding * 2;
+      const height = bounds.maxY - bounds.minY + padding * 2;
+      const scaleX = mapCanvas.width / width;
+      const scaleY = mapCanvas.height / height;
+      view.scale = Math.min(2.5, Math.max(0.5, Math.min(scaleX, scaleY)));
+      const centerX = (bounds.minX + bounds.maxX) / 2;
+      const centerY = (bounds.minY + bounds.maxY) / 2;
+      view.panX = ((mapCanvas.width / 2 - centerX) / view.scale) - (mapCanvas.width / 2 - centerX) / 1;
+      view.panY = ((mapCanvas.height / 2 - centerY) / view.scale) - (mapCanvas.height / 2 - centerY) / 1;
+    }
+
+    function centerOnPlayer() {
+      const playerRoom = statsEl.location.textContent || (mapData.rooms[0]?.id ?? "");
+      const positions = layoutGraph(mapData.rooms, playerRoom);
+      const p = positions.get(playerRoom);
+      if (!p) return;
+      view.panX = ((mapCanvas.width / 2 - p.x) / view.scale) - (mapCanvas.width / 2 - p.x) / 1;
+      view.panY = ((mapCanvas.height / 2 - p.y) / view.scale) - (mapCanvas.height / 2 - p.y) / 1;
+    }
+
+    function resetView() {
+      view = { scale: 1, panX: 0, panY: 0 };
+    }
+
+    function getRoomStats(roomId) {
+      const npcCount = npcPositions.filter((n) => n.location === roomId).length;
+      const playerCount = playerPositions.filter((p) => p.location === roomId).length;
+      const room = mapData.rooms.find((r) => r.id === roomId);
+      return { npcCount, playerCount, room };
+    }
+
+    function updateTooltip(roomId, mx, my) {
+      if (!mapTooltip) return;
+      const { npcCount, playerCount, room } = getRoomStats(roomId);
+      mapTooltip.style.display = "block";
+      mapTooltip.style.left = `${mx}px`;
+      mapTooltip.style.top = `${my}px`;
+      mapTooltip.innerHTML = `
+        <strong>${room?.name || roomId}</strong>
+        <div class="muted">ID: ${roomId} · 区域: ${room?.zone || "未知"}</div>
+        <div>NPC: ${npcCount} · 玩家: ${playerCount}</div>
+        <div>邻接: ${(room?.neighbors || []).join("、") || "无"}</div>
+      `;
+    }
+
+    function hideTooltip() {
+      if (!mapTooltip) return;
+      mapTooltip.style.display = "none";
+    }
+
     function handleMapClick(e) {
       if (!mapData.rooms.length) return;
       const rect = mapCanvas.getBoundingClientRect();
@@ -391,6 +484,38 @@
         lastPath = shortestPath(mapData.rooms, playerRoom, best.id);
         send();
         drawMap();
+      }
+    }
+
+    function handleHover(e) {
+      if (!mapData.rooms.length) return;
+      const rect = mapCanvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      const { x: worldX, y: worldY } = screenToWorld(mx, my);
+      const playerRoom = statsEl.location.textContent || (mapData.rooms[0]?.id ?? "");
+      const positions = layoutGraph(mapData.rooms, playerRoom);
+      let best = null;
+      mapData.rooms.forEach((r) => {
+        const p = positions.get(r.id);
+        if (!p) return;
+        const d = Math.hypot(p.x - worldX, p.y - worldY);
+        if (best === null || d < best.d) best = { id: r.id, d, p };
+      });
+      if (best && best.d < 30) {
+        if (hoverRoom !== best.id) {
+          hoverRoom = best.id;
+          updateTooltip(best.id, mx, my);
+          drawMap();
+        } else {
+          updateTooltip(best.id, mx, my);
+        }
+      } else {
+        if (hoverRoom) {
+          hoverRoom = null;
+          hideTooltip();
+          drawMap();
+        }
       }
     }
 
@@ -554,6 +679,9 @@
 
     mapCanvas.style.cursor = "grab";
     mapCanvas.addEventListener("click", handleMapClick);
+    mapCanvas.addEventListener("mousemove", handleHover);
+    mapCanvas.addEventListener("mouseleave", () => { hoverRoom = null; hideTooltip(); drawMap(); });
+    mapCanvas.addEventListener("dblclick", () => { fitView(); drawMap(); });
     mapCanvas.addEventListener("mousedown", (e) => {
       isPanning = true;
       panStart = { x: e.clientX, y: e.clientY };
@@ -604,6 +732,9 @@
     $("refreshNpc").addEventListener("click", loadNpcs);
     $("refreshMap").addEventListener("click", () => { loadMap(); loadNpcPositions(); loadPlayerPositions(); });
     $("bugSend").addEventListener("click", sendBug);
+    $("mapFocus").addEventListener("click", () => { centerOnPlayer(); drawMap(); });
+    $("mapFit").addEventListener("click", () => { fitView(); drawMap(); });
+    $("mapReset").addEventListener("click", () => { resetView(); drawMap(); });
     $("talk").addEventListener("click", async () => {
       const npcId = npcSelect.value;
       const input = $("npcInput").value.trim();
@@ -643,8 +774,10 @@
     });
 
     resizeCanvas();
+    fitView();
     window.addEventListener("resize", () => {
       resizeCanvas();
+      fitView();
       drawMap();
     });
     setStatus("准备就绪", "success");

@@ -59,6 +59,9 @@ export interface NpcMemory {
   conversationHistory: string[];
   questProgress?: Record<string, any>;
   playerReputation?: number;
+  dialogueNode?: string;
+  flags?: Record<string, boolean>;
+  choices?: Record<string, any>;
 }
 
 export interface FavorTransaction {
@@ -150,6 +153,7 @@ export interface Npc {
   factionAffiliation?: string;
   dialogueTree?: NpcDialogueTree;
   memory?: NpcMemory;
+  persistentDialogue?: boolean;
 }
 
 export interface NpcDialogueTree {
@@ -169,17 +173,19 @@ export interface DialogueOption {
   text: string;
   nextNode: string;
   requirements?: DialogueCondition[];
+  memoryFlag?: string;
+  choiceKey?: string;
 }
 
 export interface DialogueCondition {
-  type: "reputation" | "questProgress" | "item" | "favor" | "memoryFlag";
+  type: "reputation" | "questProgress" | "item" | "favor" | "memoryFlag" | "dialogueFlag" | "previousChoice";
   target: string;
   value: any;
-  operator: "eq" | "neq" | "gt" | "lt" | "gte" | "lte";
+  operator: "eq" | "neq" | "gt" | "lt" | "gte" | "lte" | "exists" | "notExists";
 }
 
 export interface DialogueEffect {
-  type: "reputationChange" | "questUpdate" | "itemChange" | "favorChange" | "memoryUpdate";
+  type: "reputationChange" | "questUpdate" | "itemChange" | "favorChange" | "memoryUpdate" | "dialogueFlagSet" | "choiceRecord";
   target: string;
   value: any;
 }
@@ -197,6 +203,8 @@ export interface NpcTalkResult {
   actionResult?: ActionResult;
   npcMemoryDelta?: Partial<NpcMemory>;
   playerMemoryDelta?: Partial<NpcMemory>;
+  dialogueFlags?: Record<string, boolean>;
+  recordedChoices?: Record<string, any>;
 }
 
 export interface WorldEvent {
@@ -325,4 +333,65 @@ export interface FactionServiceAccess {
   serviceId: string;
   requiredReputation: number;
   description: string;
+}
+
+// Dialogue persistence and branching enhancements
+export interface DialogueBranchingEngine {
+  getCurrentNode(npcId: string, playerId: string): string | undefined;
+  setCurrentNode(npcId: string, playerId: string, nodeId: string): void;
+  evaluateConditions(conditions: DialogueCondition[], context: DialogueContext): boolean;
+  applyEffects(effects: DialogueEffect[], context: DialogueContext): void;
+  recordChoice(npcId: string, playerId: string, choiceKey: string, value: any): void;
+  getRecordedChoice(npcId: string, playerId: string, choiceKey: string): any | undefined;
+}
+
+export interface DialogueContext {
+  player: PlayerState;
+  npc: Npc;
+  playerMemory: NpcMemory;
+  npcMemory: NpcMemory;
+  world: WorldState;
+}
+
+export interface DialoguePersistenceManager {
+  saveDialogueState(npcId: string, playerId: string, state: DialogueState): void;
+  loadDialogueState(npcId: string, playerId: string): DialogueState | undefined;
+  clearDialogueState(npcId: string, playerId: string): void;
+}
+
+export interface DialogueState {
+  currentNode: string;
+  flags: Record<string, boolean>;
+  choices: Record<string, any>;
+  lastUpdated: number;
+}
+
+// Enhanced NPC memory structure
+export interface EnhancedNpcMemory extends NpcMemory {
+  dialogueStates: Record<string, DialogueState>;
+  playerSpecificMemory: Record<string, {
+    lastInteraction: number;
+    conversationHistory: string[];
+    dialogueState: Record<string, any>;
+    questProgress?: Record<string, any>;
+    playerReputation?: number;
+    flags?: Record<string, boolean>;
+    choices?: Record<string, any>;
+  }>;
+}
+
+// Enhanced NPC interface with branching support
+export interface EnhancedNpc extends Npc {
+  enhancedMemory?: EnhancedNpcMemory;
+  dialogueEngine?: DialogueBranchingEngine;
+  persistenceManager?: DialoguePersistenceManager;
+}
+
+// Enhanced talk result with branching support
+export interface EnhancedNpcTalkResult extends NpcTalkResult {
+  nextDialogueNode?: string;
+  dialogueFlags?: Record<string, boolean>;
+  recordedChoices?: Record<string, any>;
+  branchConditions?: DialogueCondition[];
+  branchEffects?: DialogueEffect[];
 }
