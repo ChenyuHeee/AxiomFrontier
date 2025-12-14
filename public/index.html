@@ -17,68 +17,101 @@
       <div class="status" id="status">准备就绪</div>
     </header>
 
-    <section class="panel">
-      <div class="row">
-        <label class="field">
-          <span>玩家 ID</span>
-          <input id="playerId" type="text" value="demo" />
-        </label>
-        <label class="field">
-          <span>服务器</span>
-          <input id="server" type="text" value="" placeholder="留空即当前域名" />
-        </label>
-        <button id="health" class="ghost">健康检查</button>
-      </div>
-
-      <label class="field">
-        <span>输入（自然语言）</span>
-        <textarea id="input" rows="3" placeholder="例如：向北走 / 提现50 / 环顾四周"></textarea>
-      </label>
-
-      <div class="row">
-        <button id="send">发送行动</button>
-        <button id="clear" class="ghost">清空输出</button>
-        <button id="refreshNpc" class="ghost">刷新 NPC</button>
-      </div>
-    </section>
-
-    <section class="grid">
-      <div class="card">
-        <div class="card-title">行动反馈</div>
-        <div class="summary" id="summary">等待输入…</div>
-        <div class="sensory" id="sensory">
-          <div><strong>视觉</strong><span id="vision"></span></div>
-          <div><strong>听觉</strong><span id="audio"></span></div>
-          <div><strong>嗅觉</strong><span id="smell"></span></div>
-          <div><strong>触觉</strong><span id="touch"></span></div>
+    <div class="layout">
+      <section class="map-panel">
+        <div class="map-header">
+          <div>
+            <div class="map-title">世界地图</div>
+            <div class="map-sub">点击地图可移动，绿色为你，蓝色为NPC，橙色为其他玩家</div>
+          </div>
+          <button id="refreshMap" class="ghost">刷新地图</button>
         </div>
-      </div>
-      <div class="card">
-        <div class="card-title">状态</div>
-        <div class="stats" id="stats">
-          <div><strong>生命值</strong><span id="hp">-</span></div>
-          <div><strong>金钱</strong><span id="credits">-</span></div>
-          <div><strong>饥饿</strong><span id="hunger">-</span></div>
-          <div><strong>位置</strong><span id="location">-</span></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">NPC 对话</div>
-        <div class="row">
-          <select id="npcSelect" class="select"></select>
-          <button id="talk">对话</button>
-        </div>
-        <label class="field">
-          <span>对话输入</span>
-          <textarea id="npcInput" rows="2" placeholder="询问情报、交易、传闻"></textarea>
-        </label>
-        <div class="summary" id="npcReply">等待选择 NPC</div>
-      </div>
-      <div class="card">
-        <div class="card-title">世界事件</div>
-        <ul id="events" class="events"></ul>
-      </div>
-    </section>
+        <canvas id="mapCanvas" width="640" height="480"></canvas>
+      </section>
+
+      <section class="side">
+        <section class="panel">
+          <div class="row">
+            <label class="field">
+              <span>玩家 ID</span>
+              <input id="playerId" type="text" value="demo" />
+            </label>
+            <label class="field">
+              <span>服务器</span>
+              <input id="server" type="text" value="" placeholder="留空即当前域名" />
+            </label>
+            <button id="health" class="ghost">健康检查</button>
+          </div>
+
+          <label class="field">
+            <span>输入（自然语言）</span>
+            <textarea id="input" rows="3" placeholder="例如：向北走 / 提现50 / 环顾四周"></textarea>
+          </label>
+
+          <div class="row">
+            <button id="send">发送行动</button>
+            <button id="clear" class="ghost">清空输出</button>
+            <button id="refreshNpc" class="ghost">刷新 NPC</button>
+          </div>
+        </section>
+
+        <section class="grid">
+          <div class="card">
+            <div class="card-title">行动反馈</div>
+            <div class="summary" id="summary">等待输入…</div>
+            <div class="sensory" id="sensory">
+              <div><strong>视觉</strong><span id="vision"></span></div>
+              <div><strong>听觉</strong><span id="audio"></span></div>
+              <div><strong>嗅觉</strong><span id="smell"></span></div>
+              <div><strong>触觉</strong><span id="touch"></span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">状态</div>
+            <div class="stats" id="stats">
+              <div><strong>生命值</strong><span id="hp">-</span></div>
+              <div><strong>金钱</strong><span id="credits">-</span></div>
+              <div><strong>饥饿</strong><span id="hunger">-</span></div>
+              <div><strong>位置</strong><span id="location">-</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">NPC 对话</div>
+            <div class="row">
+              <select id="npcSelect" class="select"></select>
+              <button id="talk">对话</button>
+            </div>
+            <label class="field">
+              <span>对话输入</span>
+              <textarea id="npcInput" rows="2" placeholder="询问情报、交易、传闻"></textarea>
+            </label>
+            <div class="summary" id="npcReply">等待选择 NPC</div>
+          </div>
+          <div class="card">
+            <div class="card-title">世界事件</div>
+            <ul id="events" class="events"></ul>
+          </div>
+          <div class="card">
+            <div class="card-title">问题反馈</div>
+            <label class="field">
+              <span>标题</span>
+              <input id="bugTitle" type="text" placeholder="简短说明问题" />
+            </label>
+            <label class="field">
+              <span>描述</span>
+              <textarea id="bugDetail" rows="3" placeholder="复现步骤、预期/实际行为"></textarea>
+            </label>
+            <button id="bugSend">提交给策划</button>
+            <div class="summary" id="bugStatus">尚未提交</div>
+          </div>
+          <div class="card">
+            <div class="card-title">地图 / 情报</div>
+            <div class="summary" id="mapStatus">仅展示到过或听说过的地点</div>
+            <ul id="mapList" class="map-list"></ul>
+          </div>
+        </section>
+      </section>
+    </div>
   </main>
 
   <script type="module">
@@ -101,10 +134,32 @@
     const npcSelect = $("npcSelect");
     const npcReply = $("npcReply");
     const eventsEl = $("events");
+    const bugStatusEl = $("bugStatus");
+    const mapList = $("mapList");
+    const mapStatus = $("mapStatus");
+    const mapCanvas = $("mapCanvas");
+    const ctx = mapCanvas.getContext("2d");
+
+    let mapData = { rooms: [], connections: [] };
+    let npcPositions = [];
+    let playerPositions = [];
+    let view = { scale: 1, panX: 0, panY: 0 };
+    let lastPath = [];
+    let isPanning = false;
+    let panStart = { x: 0, y: 0 };
+    let panOrigin = { x: 0, y: 0 };
+
+    function resizeCanvas() {
+      const rect = mapCanvas.getBoundingClientRect();
+      mapCanvas.width = Math.max(320, rect.width);
+      mapCanvas.height = Math.max(260, rect.height);
+    }
 
     async function loadNpcs() {
+      const playerId = $("playerId").value.trim() || "demo";
       try {
-        const res = await fetch(`${baseUrl()}/api/npc`);
+        const prev = npcSelect.value;
+        const res = await fetch(`${baseUrl()}/api/npc?playerId=${encodeURIComponent(playerId)}`);
         const json = await res.json();
         npcSelect.innerHTML = "";
         const list = json.npcs || [];
@@ -122,7 +177,10 @@
           opt.textContent = `${n.name} (${n.role || ""})`;
           npcSelect.appendChild(opt);
         });
-        if (!npcSelect.value && npcSelect.options.length > 0) {
+        const hasPrev = list.some((n) => n.id === prev);
+        if (hasPrev) {
+          npcSelect.value = prev;
+        } else if (npcSelect.options.length > 0) {
           npcSelect.value = npcSelect.options[0].value;
         }
       } catch (e) {
@@ -152,9 +210,286 @@
       }
     }
 
+    function layoutGraph(rooms, centerId) {
+      const pos = new Map();
+      const center = { x: mapCanvas.width / 2, y: mapCanvas.height / 2 };
+      const radiusStep = 90;
+      const visited = new Set();
+      const queue = [{ id: centerId, depth: 0 }];
+      visited.add(centerId);
+      pos.set(centerId, center);
+      while (queue.length) {
+        const { id, depth } = queue.shift();
+        const room = rooms.find((r) => r.id === id);
+        if (!room) continue;
+        const neighbors = room.neighbors || [];
+        const angleStep = (Math.PI * 2) / Math.max(1, neighbors.length);
+        neighbors.forEach((nbr, idx) => {
+          if (visited.has(nbr)) return;
+          visited.add(nbr);
+          const angle = idx * angleStep;
+          const r = (depth + 1) * radiusStep;
+          pos.set(nbr, {
+            x: center.x + r * Math.cos(angle),
+            y: center.y + r * Math.sin(angle),
+          });
+          queue.push({ id: nbr, depth: depth + 1 });
+        });
+      }
+      // For unseen nodes, scatter them
+      rooms.forEach((r, idx) => {
+        if (!pos.has(r.id)) {
+          const angle = (idx / rooms.length) * Math.PI * 2;
+          pos.set(r.id, {
+            x: center.x + 220 * Math.cos(angle),
+            y: center.y + 220 * Math.sin(angle),
+          });
+        }
+      });
+      return pos;
+    }
+    function withTransform(drawFn) {
+      if (!ctx) return;
+      ctx.save();
+      ctx.translate(mapCanvas.width / 2, mapCanvas.height / 2);
+      ctx.scale(view.scale, view.scale);
+      ctx.translate(view.panX, view.panY);
+      ctx.translate(-mapCanvas.width / 2, -mapCanvas.height / 2);
+      drawFn();
+      ctx.restore();
+    }
+
+    function drawPath(positions, path) {
+      if (!ctx || !path || path.length < 2) return;
+      ctx.beginPath();
+      ctx.strokeStyle = "#f97316";
+      ctx.lineWidth = 3;
+      path.forEach((rid, idx) => {
+        const p = positions.get(rid);
+        if (!p) return;
+        if (idx === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      });
+      ctx.stroke();
+    }
+
+    function drawMap() {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+      const playerId = $("playerId").value.trim() || "demo";
+      const playerRoom = statsEl.location.textContent || (mapData.rooms[0]?.id ?? "");
+      const positions = layoutGraph(mapData.rooms, playerRoom);
+
+      withTransform(() => {
+        // Edges
+        ctx.strokeStyle = "#1f2937";
+        ctx.lineWidth = 1;
+        mapData.rooms.forEach((r) => {
+          const p = positions.get(r.id);
+          r.neighbors?.forEach((n) => {
+            const q = positions.get(n);
+            if (p && q) {
+              ctx.beginPath();
+              ctx.moveTo(p.x, p.y);
+              ctx.lineTo(q.x, q.y);
+              ctx.stroke();
+            }
+          });
+        });
+
+        // Highlight path
+        drawPath(positions, lastPath);
+
+        // Rooms
+        mapData.rooms.forEach((r) => {
+          const p = positions.get(r.id);
+          if (!p) return;
+          const isPlayerRoom = r.id === playerRoom;
+          ctx.beginPath();
+          ctx.fillStyle = isPlayerRoom ? "#22c55e" : r.zone === "city" ? "#38bdf8" : "#8b5cf6";
+          ctx.arc(p.x, p.y, isPlayerRoom ? 10 : 7, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = "#e2e8f0";
+          ctx.font = "12px Inter, sans-serif";
+          ctx.fillText(r.name || r.id, p.x + 10, p.y + 4);
+        });
+
+        // NPCs
+        npcPositions.forEach((n) => {
+          const p = positions.get(n.location);
+          if (!p) return;
+          ctx.beginPath();
+          ctx.fillStyle = "#3b82f6";
+          ctx.arc(p.x, p.y - 14, 5, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        // Other players
+        playerPositions.forEach((pl) => {
+          if (pl.id === playerId) return;
+          const p = positions.get(pl.location);
+          if (!p) return;
+          ctx.beginPath();
+          ctx.fillStyle = "#f59e0b";
+          ctx.arc(p.x, p.y + 14, 5, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      });
+
+    }
+
+    function shortestPath(rooms, start, target) {
+      const adj = new Map();
+      rooms.forEach((r) => adj.set(r.id, r.neighbors || []));
+      const queue = [start];
+      const prev = new Map([[start, null]]);
+      while (queue.length) {
+        const cur = queue.shift();
+        if (cur === target) break;
+        (adj.get(cur) || []).forEach((n) => {
+          if (!prev.has(n)) {
+            prev.set(n, cur);
+            queue.push(n);
+          }
+        });
+      }
+      if (!prev.has(target)) return [];
+      const path = [];
+      let cur = target;
+      while (cur) {
+        path.push(cur);
+        cur = prev.get(cur);
+      }
+      return path.reverse();
+    }
+
+    function screenToWorld(mx, my) {
+      return {
+        x: (mx - mapCanvas.width / 2) / view.scale - view.panX + mapCanvas.width / 2,
+        y: (my - mapCanvas.height / 2) / view.scale - view.panY + mapCanvas.height / 2,
+      };
+    }
+
+    function handleMapClick(e) {
+      if (!mapData.rooms.length) return;
+      const rect = mapCanvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      const { x: worldX, y: worldY } = screenToWorld(mx, my);
+      const playerRoom = statsEl.location.textContent || (mapData.rooms[0]?.id ?? "");
+      const positions = layoutGraph(mapData.rooms, playerRoom);
+      let best = null;
+      mapData.rooms.forEach((r) => {
+        const p = positions.get(r.id);
+        if (!p) return;
+        const d = Math.hypot(p.x - worldX, p.y - worldY);
+        if (best === null || d < best.d) best = { id: r.id, d };
+      });
+      if (best && best.d < 30) {
+        const input = `move to ${best.id}`;
+        $("input").value = input;
+        lastPath = shortestPath(mapData.rooms, playerRoom, best.id);
+        send();
+        drawMap();
+      }
+    }
+
+    async function sendBug() {
+      const title = $("bugTitle").value.trim();
+      const detail = $("bugDetail").value.trim();
+      const playerId = $("playerId").value.trim() || undefined;
+      if (!title || !detail) {
+        bugStatusEl.textContent = "请填写标题和描述";
+        return;
+      }
+      bugStatusEl.textContent = "提交中…";
+      try {
+        const res = await fetch(`${baseUrl()}/api/bug-report`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title, detail, playerId }),
+        });
+        const json = await res.json();
+        if (!res.ok) {
+          bugStatusEl.textContent = json.error || `提交失败 (${res.status})`;
+          return;
+        }
+        bugStatusEl.textContent = `已提交 (${json.id || "已记录"})`;
+        setStatus("Bug 已提交给策划", "info");
+      } catch (e) {
+        bugStatusEl.textContent = (e).message;
+      }
+    }
+
+    async function loadMap() {
+      const playerId = $("playerId").value.trim() || "demo";
+      try {
+        const res = await fetch(`${baseUrl()}/api/session/${encodeURIComponent(playerId)}/map`);
+        const json = await res.json();
+        mapList.innerHTML = "";
+        const rooms = json.rooms || [];
+        mapData.rooms = rooms;
+        lastPath = [];
+        if (rooms.length === 0) {
+          mapStatus.textContent = "暂无可见区域，尝试观察或移动探索。";
+          return;
+        }
+        mapStatus.textContent = "仅展示到过或听说过的地点";
+        rooms.forEach((r) => {
+          const li = document.createElement("li");
+          const tag = document.createElement("span");
+          tag.className = `tag ${r.status === "visited" ? "visited" : "known"}`;
+          tag.textContent = r.status === "visited" ? "到访" : "听闻";
+          const name = document.createElement("span");
+          name.className = "map-name";
+          name.textContent = `${r.name} (${r.id})`;
+          const neighbors = document.createElement("div");
+          neighbors.className = "map-neighbors";
+          neighbors.textContent = `可达：${(r.neighbors || []).join("、") || "未知"}`;
+          li.appendChild(tag);
+          li.appendChild(name);
+          li.appendChild(neighbors);
+          mapList.appendChild(li);
+        });
+        drawMap();
+      } catch (e) {
+        mapStatus.textContent = (e).message;
+      }
+    }
+
+    async function loadNpcPositions() {
+      try {
+        const res = await fetch(`${baseUrl()}/api/npc?scope=all`);
+        const json = await res.json();
+        npcPositions = (json.npcs || []).map((n) => ({ id: n.id, location: n.location }));
+        drawMap();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function loadPlayerPositions() {
+      try {
+        const res = await fetch(`${baseUrl()}/api/players`);
+        const json = await res.json();
+        playerPositions = json.players || [];
+        drawMap();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
     function setStatus(text, tone = "info") {
       statusEl.textContent = text;
       statusEl.dataset.tone = tone;
+    }
+
+    function friendlyError(message, fallback = "请求失败") {
+      if (!message) return fallback;
+      const lower = message.toLowerCase();
+      if (lower.includes("failed to fetch") || lower.includes("network")) return `${fallback}：网络异常`;
+      if (lower.startsWith("http")) return `${fallback}：服务不可用`;
+      return `${fallback}：${message}`;
     }
 
     function baseUrl() {
@@ -170,7 +505,7 @@
         const json = await res.json();
         setStatus(`健康: ${json.status}`, "success");
       } catch (e) {
-        setStatus(`健康检查失败: ${(e).message}`, "error");
+        setStatus(friendlyError((e).message, "健康检查失败"), "error");
       }
     }
 
@@ -190,7 +525,7 @@
         });
         const json = await res.json();
         if (!res.ok) {
-          setStatus(`失败: ${json.error || res.status}`, "error");
+          setStatus("执行失败，请稍后再试", "error");
           summaryEl.textContent = json.error || "执行失败";
           return;
         }
@@ -211,10 +546,51 @@
           return;
         }
         setStatus("完成", "success");
+        loadMap();
       } catch (e) {
-        setStatus(`请求失败: ${(e).message}`, "error");
+        setStatus(friendlyError((e).message), "error");
       }
     }
+
+    mapCanvas.style.cursor = "grab";
+    mapCanvas.addEventListener("click", handleMapClick);
+    mapCanvas.addEventListener("mousedown", (e) => {
+      isPanning = true;
+      panStart = { x: e.clientX, y: e.clientY };
+      panOrigin = { x: view.panX, y: view.panY };
+      mapCanvas.style.cursor = "grabbing";
+    });
+    mapCanvas.addEventListener("mousemove", (e) => {
+      if (!isPanning) return;
+      const dx = (e.clientX - panStart.x) / view.scale;
+      const dy = (e.clientY - panStart.y) / view.scale;
+      view.panX = panOrigin.x + dx;
+      view.panY = panOrigin.y + dy;
+      drawMap();
+    });
+    const stopPan = () => {
+      isPanning = false;
+      mapCanvas.style.cursor = "grab";
+    };
+    mapCanvas.addEventListener("mouseup", stopPan);
+    mapCanvas.addEventListener("mouseleave", stopPan);
+    mapCanvas.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        const rect = mapCanvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        const worldBefore = screenToWorld(mx, my);
+        const factor = e.deltaY > 0 ? 0.9 : 1.1;
+        view.scale = Math.min(3, Math.max(0.5, view.scale * factor));
+        // Keep zoom centered around the cursor
+        view.panX = (mx - mapCanvas.width / 2) / view.scale - worldBefore.x + mapCanvas.width / 2;
+        view.panY = (my - mapCanvas.height / 2) / view.scale - worldBefore.y + mapCanvas.height / 2;
+        drawMap();
+      },
+      { passive: false },
+    );
 
     $("send").addEventListener("click", send);
     $("health").addEventListener("click", doHealth);
@@ -226,9 +602,12 @@
     });
 
     $("refreshNpc").addEventListener("click", loadNpcs);
+    $("refreshMap").addEventListener("click", () => { loadMap(); loadNpcPositions(); loadPlayerPositions(); });
+    $("bugSend").addEventListener("click", sendBug);
     $("talk").addEventListener("click", async () => {
       const npcId = npcSelect.value;
       const input = $("npcInput").value.trim();
+      const playerId = $("playerId").value.trim() || "demo";
       if (!npcId) {
         npcReply.textContent = "请先选择 NPC";
         return;
@@ -241,14 +620,16 @@
         const res = await fetch(`${baseUrl()}/api/npc/${encodeURIComponent(npcId)}/talk`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ input }),
+          body: JSON.stringify({ input, playerId }),
         });
         const json = await res.json();
         if (!res.ok) {
           npcReply.textContent = json.error || "对话失败";
           return;
         }
-        npcReply.textContent = json.reply?.reply || json.reply || "";
+        const replyText = json.reply?.reply || json.reply || "";
+        const actionSummary = json.reply?.actionResult?.summary;
+        npcReply.textContent = actionSummary ? `${replyText}\n[行动]: ${actionSummary}` : replyText;
       } catch (e) {
         npcReply.textContent = (e).message;
       }
@@ -261,11 +642,20 @@
       }
     });
 
+    resizeCanvas();
+    window.addEventListener("resize", () => {
+      resizeCanvas();
+      drawMap();
+    });
     setStatus("准备就绪", "success");
     loadNpcs();
     loadEvents();
+    loadMap();
+    loadNpcPositions();
+    loadPlayerPositions();
     setInterval(loadNpcs, 15000);
     setInterval(loadEvents, 15000);
+    setInterval(() => { loadNpcPositions(); loadPlayerPositions(); }, 15000);
   </script>
 </body>
 </html>

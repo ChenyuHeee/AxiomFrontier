@@ -1,3 +1,13 @@
+## ⚠️ UNSAFE DEV AGENTS (HOTPATCH)
+
+> 高风险：该功能允许 LLM 直接写入服务器代码文件，可能导致崩溃、数据丢失或安全问题。仅在隔离环境实验使用。
+
+- `/api/dev/hotpatch`：POST `{intent}`，调用 dev LLM 返回 `{path, content}` 并直接写盘。
+- `/api/ruler/dev-intent`：由统治者 LLM 生成 `{intent}`，可再交给 `/api/dev/hotpatch` 使用。
+- `/api/dev/rule-patch`: POST `{gap}`，规则工程师 LLM 输出补丁并直接写盘。
+- 定时自动多 Agent：设计组（可决定任何系统，鼓励大胆/超现实想法，4-6 项缺口每轮）产出缺口 -> 开发组（coder agents）生成补丁 -> QA 组审批 -> 写盘；开发组多 Agent -> QA 组 -> 写盘；统治者/NPC/事件同 tick 运行。
+
+默认无任何防护、无审批、无测试。生产环境请禁用或隔离运行。
 # 项目：Axiom Frontier（纯文本起步 MMO）
 
 英文名：Axiom Frontier

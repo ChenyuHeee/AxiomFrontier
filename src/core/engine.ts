@@ -12,6 +12,16 @@ export class GameEngine {
     registerDefaultActions(this.registry);
   }
 
+  reloadActions(register: (registry: ActionRegistry) => void) {
+    const next = new ActionRegistry();
+    register(next);
+    this.registry = next;
+  }
+
+  hasAction(action: string) {
+    return this.registry.has(action);
+  }
+
   ensurePlayer(playerId: string) {
     return this.world.ensurePlayer(playerId);
   }
@@ -29,6 +39,6 @@ export class GameEngine {
         state: player,
       };
     }
-    return handler({ world: this.world, player, room, city, policy: city?.policy }, plan);
+    return handler({ world: this.world, player, room, city }, plan);
   }
 }

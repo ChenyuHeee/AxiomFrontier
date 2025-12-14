@@ -1,0 +1,505 @@
+{
+  "players": [
+    {
+      "id": "demo",
+      "location": "market",
+      "inventory": [],
+      "credits": 100,
+      "health": 100,
+      "hunger": 99,
+      "status": "ok",
+      "discoveredRooms": [
+        "market"
+      ],
+      "knownRooms": [],
+      "favors": 0,
+      "favorCap": 100,
+      "favorSources": [],
+      "npcMemory": {
+        "market-trader-lin": {
+          "lastInteraction": 1765679052499,
+          "conversationHistory": [
+            "{\"input\":\"我要买东西\",\"reply\":\"欢迎光临！我是林商，这里有各种商品，从武器到药水一应俱全。您想看看什么？\"}",
+            "{\"input\":\"武器\",\"reply\":\"武器？当然有！我这里从普通铁剑到稀有魔法武器都有。您想要什么类型的？近战、远程还是魔法？\"}",
+            "{\"input\":\"近战\",\"reply\":\"近战武器？好选择！我这里有铁剑（50金币）、钢剑（120金币）和一把稀有的火焰剑（500金币）。您想看看哪一把？\"}",
+            "{\"input\":\"铁剑\",\"reply\":\"铁剑？好眼光！这把铁剑售价50金币，基础攻击力不错，适合新手。您想购买吗？\"}",
+            "{\"input\":\"购买\",\"reply\":\"太好了！铁剑50金币，加上5%交易税，总共52.5金币。确认购买吗？\"}",
+            "{\"input\":\"确认购买\",\"reply\":\"成交！铁剑已售出，总价52.5金币已扣除。感谢惠顾，欢迎再来！\"}"
+          ],
+          "dialogueState": {
+            "interaction": "iron_sword_purchased"
+          }
+        }
+      }
+    }
+  ],
+  "rooms": [
+    {
+      "id": "square",
+      "name": "中央广场",
+      "neighbors": [
+        "north_gate",
+        "market"
+      ],
+      "cityId": "bastion",
+      "zone": "city"
+    },
+    {
+      "id": "north_gate",
+      "name": "北门哨所",
+      "neighbors": [
+        "square",
+        "wild_north"
+      ],
+      "cityId": "bastion",
+      "zone": "city"
+    },
+    {
+      "id": "market",
+      "name": "交易所",
+      "neighbors": [
+        "square"
+      ],
+      "cityId": "bastion",
+      "zone": "city"
+    },
+    {
+      "id": "wild_north",
+      "name": "北郊荒野",
+      "neighbors": [
+        "north_gate",
+        "ruins"
+      ],
+      "zone": "wild"
+    },
+    {
+      "id": "ruins",
+      "name": "残垣废墟",
+      "neighbors": [
+        "wild_north"
+      ],
+      "zone": "wild"
+    }
+  ],
+  "cities": [
+    {
+      "id": "bastion",
+      "name": "新堡",
+      "policy": {
+        "name": "New Bastion",
+        "safetyLevel": 0.6,
+        "guards": {
+          "density": "med",
+          "responseTime": "fast",
+          "lethality": "nonlethal"
+        },
+        "pvp": {
+          "on": true,
+          "dropRule": "partial",
+          "penalty": "bounty"
+        },
+        "tax": {
+          "trade": 0.05,
+          "withdraw": 0.02,
+          "gateFee": 0,
+          "storageFee": 0.01,
+          "insuranceRate": 0
+        },
+        "withdrawPoints": [
+          {
+            "id": "bank_gate",
+            "fee": 0.02,
+            "cooldownSec": 600,
+            "safeRadius": 10,
+            "hiValueLimit": 5000,
+            "hours": "24/7"
+          }
+        ],
+        "access": {
+          "mode": "open"
+        },
+        "policy": {
+          "safetyLevel": 0.7,
+          "guards": {
+            "density": "high",
+            "responseTime": "fast",
+            "lethality": "nonlethal"
+          }
+        }
+      }
+    }
+  ],
+  "npcs": [
+    {
+      "id": "gatekeeper-arn",
+      "name": "阿恩",
+      "role": "北门守卫",
+      "location": "north_gate",
+      "style": "粗鲁直接，略带不耐烦"
+    },
+    {
+      "id": "north-gate-guard",
+      "name": "卫兵雷克",
+      "role": "哨所守卫",
+      "location": "north_gate",
+      "style": "警惕而严肃，说话简短直接"
+    },
+    {
+      "id": "market-trader-lin",
+      "name": "林商",
+      "role": "交易所商人",
+      "location": "market",
+      "style": "精明圆滑，语速快且充满推销热情",
+      "memory": {
+        "lastInteraction": 1765679052499,
+        "conversationHistory": [
+          "{\"input\":\"我要买东西\",\"reply\":\"欢迎光临！我是林商，这里有各种商品，从武器到药水一应俱全。您想看看什么？\"}",
+          "{\"input\":\"武器\",\"reply\":\"武器？当然有！我这里从普通铁剑到稀有魔法武器都有。您想要什么类型的？近战、远程还是魔法？\"}",
+          "{\"input\":\"近战\",\"reply\":\"近战武器？好选择！我这里有铁剑（50金币）、钢剑（120金币）和一把稀有的火焰剑（500金币）。您想看看哪一把？\"}",
+          "{\"input\":\"铁剑\",\"reply\":\"铁剑？好眼光！这把铁剑售价50金币，基础攻击力不错，适合新手。您想购买吗？\"}",
+          "{\"input\":\"购买\",\"reply\":\"太好了！铁剑50金币，加上5%交易税，总共52.5金币。确认购买吗？\"}",
+          "{\"input\":\"确认购买\",\"reply\":\"成交！铁剑已售出，总价52.5金币已扣除。感谢惠顾，欢迎再来！\"}"
+        ],
+        "dialogueState": {
+          "stage": "completed"
+        }
+      }
+    }
+  ],
+  "events": [
+    {
+      "id": "broadcast-1765679490996",
+      "title": "统治者广播",
+      "detail": "新堡垒的公民们，在此周期性时钟周期中，我们继续坚持安全政策，通过高密度守卫和非致命执法，确保开放城市中所有活动的持续安全与稳定。",
+      "cityId": "bastion",
+      "ts": 1765679490996
+    },
+    {
+      "id": "periodic-tick",
+      "title": "周期性系统更新",
+      "detail": "全球服务器时钟周期已处理，正在更新城市状态与玩家活动。",
+      "cityId": "bastion",
+      "ts": 1720000000
+    },
+    {
+      "id": "gatekeeper-arn-1765679492052",
+      "title": "北门守卫阿恩的例行检查",
+      "detail": "阿恩站在北门哨所，粗鲁地扫视着进出的人群，不耐烦地喊道：“快点，别磨蹭！出示你的通行证，或者交钱进城。北郊荒野可不安全，小心点。”",
+      "cityId": "bastion",
+      "npcId": "gatekeeper-arn",
+      "ts": 1765679492053
+    },
+    {
+      "id": "market-trader-lin-1765679491135",
+      "title": "返回交易所",
+      "detail": "林商完成广场宣传后，迅速返回交易所整理库存并准备迎接新顾客，保持一贯的推销热情。",
+      "cityId": "bastion",
+      "npcId": "market-trader-lin",
+      "ts": 1765679491135
+    },
+    {
+      "id": "north-gate-guard-1765679490998",
+      "title": "边境警戒",
+      "detail": "卫兵雷克在北门哨所紧盯着通往北郊荒野的方向，保持高度警惕，防止任何威胁接近新堡。",
+      "cityId": "bastion",
+      "npcId": "north-gate-guard",
+      "ts": 1765679490998
+    },
+    {
+      "id": "broadcast-1765678937721",
+      "title": "统治者广播",
+      "detail": "新堡垒的公民们，在此周期性更新中，我们重申对安全的承诺，通过高密度守卫和非致命措施，确保所有居民和访客享有安全稳定的环境。",
+      "cityId": "bastion",
+      "ts": 1765678937721
+    },
+    {
+      "id": "periodic-tick",
+      "title": "周期性系统更新",
+      "detail": "全球服务器时钟周期已处理，正在更新城市状态与玩家活动。",
+      "cityId": "bastion",
+      "ts": 1720000000
+    },
+    {
+      "id": "market-trader-lin-1765678938219",
+      "title": "市场推广",
+      "detail": "林商在交易所快速整理货物后，决定前往中央广场进行新一轮的推销，热情地介绍今日特价和交易优惠。",
+      "cityId": "bastion",
+      "npcId": "market-trader-lin",
+      "ts": 1765678938219
+    },
+    {
+      "id": "gatekeeper-arn-1765678938083",
+      "title": "北门守卫阿恩的例行检查",
+      "detail": "阿恩站在北门哨所，粗鲁地扫视着进出的人群，不耐烦地喊道：“快点，别磨蹭！出示你的通行证，或者交钱进城。北郊荒野可不安全，小心点。”",
+      "cityId": "bastion",
+      "npcId": "gatekeeper-arn",
+      "ts": 1765678938083
+    },
+    {
+      "id": "north-gate-guard-1765678937881",
+      "title": "边境监视",
+      "detail": "卫兵雷克在北门哨所严密监视着通往北郊荒野的通道，确保没有危险接近新堡。",
+      "cityId": "bastion",
+      "npcId": "north-gate-guard",
+      "ts": 1765678937881
+    },
+    {
+      "id": "broadcast-1765677427752",
+      "title": "统治者广播",
+      "detail": "新堡垒的公民们，在此周期性时钟周期中，我们维持既定的安全政策，通过高密度守卫和非致命执法，确保我们开放城市中所有活动的持续安全与稳定。",
+      "cityId": "bastion",
+      "ts": 1765677427752
+    },
+    {
+      "id": "periodic-tick",
+      "title": "周期性系统更新",
+      "detail": "全球服务器时钟周期已处理，正在更新城市状态与玩家活动。",
+      "cityId": "bastion",
+      "ts": 1720000000
+    },
+    {
+      "id": "gatekeeper-arn-1765677428580",
+      "title": "北门守卫阿恩的例行检查",
+      "detail": "阿恩站在北门哨所，粗鲁地扫视着进出的人群，不耐烦地喊道：“快点，别磨蹭！出示你的通行证，或者交钱进城。北郊荒野可不安全，小心点。”",
+      "cityId": "bastion",
+      "npcId": "gatekeeper-arn",
+      "ts": 1765677428580
+    },
+    {
+      "id": "north-gate-guard-1765677428279",
+      "title": "边境警戒",
+      "detail": "卫兵雷克在北门哨所紧盯着通往北郊荒野的方向，保持高度警惕，防止任何威胁接近新堡。",
+      "cityId": "bastion",
+      "npcId": "north-gate-guard",
+      "ts": 1765677428279
+    },
+    {
+      "id": "market-trader-lin-1765677428231",
+      "title": "返回交易所",
+      "detail": "林商结束广场宣传，返回交易所整理库存并准备接待新顾客。",
+      "cityId": "bastion",
+      "npcId": "market-trader-lin",
+      "ts": 1765677428231
+    },
+    {
+      "id": "improv-1765677421963",
+      "title": "隐藏路径被发现",
+      "detail": "向北望去，你发现一条向东北延伸的小巷，主地图上未标注。它可能提供新路线或隐藏秘密。",
+      "cityId": "bastion",
+      "ts": 1765677421963
+    },
+    {
+      "id": "periodic-tick",
+      "title": "周期性系统更新",
+      "detail": "全球服务器时钟周期已处理，正在更新城市状态与玩家活动。",
+      "cityId": "bastion",
+      "ts": 1720000000
+    },
+    {
+      "id": "broadcast-1765677294578",
+      "title": "统治者广播",
+      "detail": "新堡垒的公民们，在此周期性更新中，我们继续坚持高标准的安全措施，通过高密度守卫和非致命手段，确保所有居民和访客享有稳定安全的环境。",
+      "cityId": "bastion",
+      "ts": 1765677294578
+    },
+    {
+      "id": "gatekeeper-arn-1765677297627",
+      "title": "北门守卫阿恩的例行检查",
+      "detail": "阿恩站在北门哨所，粗鲁地扫视着进出的人群，不耐烦地喊道：“快点，别磨蹭！出示你的通行证，或者交钱进城。北郊荒野可不安全，小心点。”",
+      "cityId": "bastion",
+      "npcId": "gatekeeper-arn",
+      "ts": 1765677297627
+    },
+    {
+      "id": "north-gate-guard-1765677296677",
+      "title": "例行巡逻",
+      "detail": "卫兵雷克在北门哨所进行例行巡逻，目光锐利地扫视着通往北郊荒野的道路，确保边境安全。",
+      "cityId": "bastion",
+      "npcId": "north-gate-guard",
+      "ts": 1765677296677
+    },
+    {
+      "id": "market-trader-lin-1765677296590",
+      "title": "广场推销",
+      "detail": "林商快步走向中央广场，热情地向过往玩家推销交易所的优惠商品和最新行情。",
+      "cityId": "bastion",
+      "npcId": "market-trader-lin",
+      "ts": 1765677296590
+    },
+    {
+      "id": "broadcast-1765641089436",
+      "title": "统治者广播",
+      "detail": "新堡垒的公民们，此周期性确认我们持续致力于安全，通过高守卫密度和非致命执法，保持城市安全开放，支持所有活动。",
+      "cityId": "bastion",
+      "ts": 1765641089436
+    },
+    {
+      "id": "periodic-tick",
+      "title": "周期性系统更新",
+      "detail": "全球服务器时钟周期已处理，正在更新城市状态与玩家活动。",
+      "cityId": "bastion",
+      "ts": 1720000000
+    },
+    {
+      "id": "gatekeeper-arn-1765641090940",
+      "title": "北门守卫阿恩的例行检查",
+      "detail": "阿恩站在北门哨所，粗鲁地扫视着进出的人群，不耐烦地喊道：“快点，别磨蹭！出示你的通行证，或者交钱进城。北郊荒野可不安全，小心点。”",
+      "cityId": "bastion",
+      "npcId": "gatekeeper-arn",
+      "ts": 1765641090940
+    },
+    {
+      "id": "north-gate-guard-1765641090343",
+      "title": "例行检查",
+      "detail": "卫兵雷克在北门哨所仔细检查过往行人，确保没有威胁进入新堡。",
+      "cityId": "bastion",
+      "npcId": "north-gate-guard",
+      "ts": 1765641090343
+    },
+    {
+      "id": "broadcast-1765640899700",
+      "title": "统治者广播",
+      "detail": "新堡垒的公民们，在此周期性更新中，我们重申对安全的承诺，通过维持增强的守卫密度和非致命措施，确保所有居民和访客的安全环境。",
+      "cityId": "bastion",
+      "ts": 1765640899700
+    },
+    {
+      "id": "periodic-tick",
+      "title": "周期性系统更新",
+      "detail": "全球服务器时钟周期已处理，正在更新城市状态与玩家活动。",
+      "cityId": "bastion",
+      "ts": 1720000000
+    },
+    {
+      "id": "gatekeeper-arn-1765640898466",
+      "title": "北门守卫阿恩的例行检查",
+      "detail": "阿恩站在北门哨所，粗鲁地扫视着进出的人群，不耐烦地喊道：“快点，别磨蹭！出示你的通行证，或者交钱进城。北郊荒野可不安全，小心点。”",
+      "cityId": "bastion",
+      "npcId": "gatekeeper-arn",
+      "ts": 1765640898466
+    },
+    {
+      "id": "market-trader-lin-1765640898038",
+      "title": "市场动态",
+      "detail": "林商整理好摊位，准备前往中央广场宣传今日特价商品。",
+      "npcId": "market-trader-lin",
+      "ts": 1765640898038
+    },
+    {
+      "id": "north-gate-guard-1765640897614",
+      "title": "坚守岗位",
+      "detail": "卫兵雷克在北门哨所保持警惕，监视着进出新堡的人员，确保城市安全。",
+      "cityId": "bastion",
+      "npcId": "north-gate-guard",
+      "ts": 1765640897614
+    },
+    {
+      "id": "broadcast-1765640846824",
+      "title": "统治者广播",
+      "detail": "新堡垒的公民们，安全是我们的首要任务。守卫密度已提高至高等级以加强保护，坚持我们对安全开放城市的承诺。",
+      "cityId": "bastion",
+      "ts": 1765640846824
+    },
+    {
+      "id": "periodic-tick",
+      "title": "周期性系统更新",
+      "detail": "全球服务器时钟周期已处理，正在更新城市状态与玩家活动。",
+      "cityId": "bastion",
+      "ts": 1720000000
+    },
+    {
+      "id": "gatekeeper-arn-1765640845904",
+      "title": "北门守卫阿恩的例行检查",
+      "detail": "阿恩站在北门哨所，粗鲁地扫视着进出的人群，不耐烦地喊道：“快点，别磨蹭！出示你的通行证，或者交钱进城。北郊荒野可不安全，小心点。”",
+      "npcId": "gatekeeper-arn",
+      "ts": 1765640845904
+    },
+    {
+      "id": "north-gate-guard-1765640844778",
+      "title": "警惕巡逻",
+      "detail": "卫兵雷克在北门哨所警惕地扫视着周围，确保没有可疑活动。",
+      "cityId": "bastion",
+      "npcId": "north-gate-guard",
+      "ts": 1765640844778
+    },
+    {
+      "id": "broadcast-1765637881571",
+      "title": "统治者广播",
+      "detail": "新堡垒的公民们，为应对周期性紧张局势，安全措施已加强。撤离点守卫密度增加，安全半径扩大，以确保您的安全。请保持警惕，报告任何可疑活动。",
+      "cityId": "bastion",
+      "ts": 1765637881571
+    },
+    {
+      "id": "periodic-tick",
+      "title": "周期性系统更新",
+      "detail": "全球服务器时钟周期已处理，正在更新城市状态与玩家活动。",
+      "cityId": "bastion",
+      "ts": 1720000000
+    }
+  ],
+  "glossary": [
+    {
+      "source": "Periodic System Update",
+      "target": "周期性系统更新"
+    },
+    {
+      "source": "New Bastion",
+      "target": "新堡垒"
+    },
+    {
+      "source": "Hidden Path Discovered",
+      "target": "隐藏路径被发现"
+    }
+  ],
+  "bugReports": [
+    {
+      "id": "bug-1765637748950",
+      "title": "不能及时刷新npc",
+      "detail": "比如现在，我到了交易所但是没有npc",
+      "playerId": "demo",
+      "ts": 1765637748950
+    },
+    {
+      "id": "bug-1765640863606",
+      "title": "交易所空无一人",
+      "detail": "交易所空无一人，没有刷新npc",
+      "playerId": "demo",
+      "ts": 1765640863606
+    },
+    {
+      "id": "bug-1765640964099",
+      "title": "和npc对话有问题",
+      "detail": "每次对话完后总是跳转到第一个npc选项",
+      "playerId": "demo",
+      "ts": 1765640964099
+    },
+    {
+      "id": "bug-1765641076981",
+      "title": "和npc对话有问题",
+      "detail": "npc没有对话记忆",
+      "playerId": "demo",
+      "ts": 1765641076981
+    },
+    {
+      "id": "bug-1765677354694",
+      "title": "视野不对",
+      "detail": "玩家在交易所，却能看到北门守卫阿恩的例行检查。这不对",
+      "playerId": "demo",
+      "ts": 1765677354694
+    },
+    {
+      "id": "bug-1765677392259",
+      "title": "npc机制不对",
+      "detail": "玩家在交易所，却能与北门守卫和北门哨位对话",
+      "playerId": "demo",
+      "ts": 1765677392259
+    },
+    {
+      "id": "bug-1765679087769",
+      "title": "对话中虚假购买",
+      "detail": "购买了铁剑但是没有扣款",
+      "playerId": "demo",
+      "ts": 1765679087769
+    }
+  ]
+}
